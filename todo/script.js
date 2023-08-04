@@ -54,16 +54,20 @@ function loadItems() {
                 const divisionDate = Math.max(0, Math.min((CURRENT_DATE - temp.savedDate) / DATE_CONVERT, tempTotalDate));
                 const percentDate = divisionDate / totalDate * 100;
                 //날짜 표기형식 변환
-                var tempY = temp.date.getFullYear();
-                var tempM = temp.date.getMonth() + 1;
-                var tempD = temp.date.getDate();
-                const dateToString = tempY + "년 " + tempM + "월 " + tempD + "일 "
+                var tempDate = new Date(temp.date);
+                var tempM = tempDate.getMonth() + 1;
+                var tempD = tempDate.getDate();
+                const dateToString = tempM + "월 " + tempD + "일 "
                 //화면에 표시
-                li.textContent = `${dateToString} - ${temp.text} (${percentDate}퍼센트)`;
+                li.textContent = `${dateToString} || ${temp.text} (${percentDate}퍼센트)`;
                 li.addEventListener("click", function() {
                     deleteItem(temp.id);
                 });
                 if(temp.date < CURRENT_DATE) {
+                    li.addEventListener("contextmenu", function(e) {
+                        e.preventDefault();
+                        addTime(temp.id);
+                    });
                     expiredList.appendChild(li);
                 }
                 else {
@@ -91,7 +95,7 @@ document.getElementById("saveButton").addEventListener("click", function() {
     try {
         req = store.add(obj);
     } catch(e) { }
-
+    //이후 처리
     req.onsuccess = function() {
         console.log("item saved successfully")
         document.getElementById("text").value = "";
@@ -106,4 +110,31 @@ function deleteItem(id) {
     const store = transaction.objectStore(STORE_NAME);
     store.delete(id);
     transaction.oncomplete = loadItems;
+}
+
+//시간 하루 연장
+function addTime(id) {
+    const store = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME);
+    let req = store.get(id);
+    req.onerror = function(e) {
+        console.log("error occured while getting data to edit")
+    }
+
+    req.onsuccess = function(e) {
+        console.log("editing date : " + (CURRENT_DATE.getDate() + 1))
+        var data = e.target.result;
+        //1일을 추가
+        data.date = new Date(CURRENT_DATE);
+        data.date.setDate(CURRENT_DATE.getDate() + 1);
+
+        //업데이트
+        var reqUpdate = store.put(data);
+        reqUpdate.onerror = function(e) {
+            console.log("error occured while editing data");
+        }
+        reqUpdate.onsuccess = function(e) {
+            console.log("edited data : date + 1");
+            loadItems();
+        }
+    }
 }
