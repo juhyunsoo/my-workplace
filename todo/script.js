@@ -32,9 +32,7 @@ openDB();
 // 저장된 아이템 불러오기
 function loadItems() {
     const itemList = document.getElementById("itemList");
-    const expiredList = document.getElementById("expiredList");
-    itemList.innerHTML = "";
-    expiredList.innerHTML = "";
+    itemList.innerHTML = "<tr><td id='init'>&nbsp;</td></tr>";
 
     const store = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME);
     const buffer = [];
@@ -48,67 +46,74 @@ function loadItems() {
         else {
             buffer.sort((a, b) => new Date(a.date) - new Date(b.date));
             for(const temp of buffer) {
-                const li = document.createElement("li");
+                const tr = document.createElement("tr");
                 //날짜계산
-                var tempTotalDate = (temp.date - temp.savedDate) / DATE_CONVERT;
-                const totalDate = Math.max(1, tempTotalDate);
-                const divisionDate = Math.max(0, Math.min((CURRENT_DATE - temp.savedDate) / DATE_CONVERT, tempTotalDate));
-                const percentDate = divisionDate / totalDate * 100;
+                const savedDate = new Date(temp.savedDate);
+                const percentDate = 100 - Math.min(100, (temp.date - CURRENT_DATE)/DATE_CONVERT/21 * 100);
                 //날짜 표기형식 변환
                 var tempDate = new Date(temp.date);
                 var tempY = tempDate.getFullYear();
                 var tempM = tempDate.getMonth() + 1;
                 var tempD = tempDate.getDate();
-                const dateToString = tempM + "월 " + tempD + "일 "
-                //화면에 표시
-                li.textContent = `${dateToString} || ${temp.text}`;
-                li.addEventListener("click", function() {
+                const dateToString = tempM + " / " + tempD;
+                //화면에 표시할 내용
+                tr.innerHTML = `<td>${temp.text}</td><td>${dateToString}</td><td><input type="radio" class="repeatable"></td><td class="info">` + savedDate + "</td>";
+                tr.addEventListener("click", function() {
                     deleteItem(temp.id);
                 });
                 //반복작업이면 :
                 if(temp.isRepeat == "true") {
                     //날짜를 업데이트 해야 한다면 :
-                    if (tempDate < CURRENT_DATE) {
-                        while(tempDate < CURRENT_DATE || (tempY == CURRENT_DATE.getFullYear() && tempM == CURRENT_DATE.getMonth() + 1 && tempD == CURRENT_DATE.getDate())) {
+                    if(tempY == CURRENT_DATE.getFullYear() && tempM == CURRENT_DATE.getMonth() + 1 && tempD == CURRENT_DATE.getDate()) {
+                    }
+                    else if (tempDate < CURRENT_DATE) {
+                        while(tempDate < CURRENT_DATE && !(tempY == CURRENT_DATE.getFullYear() && tempM == CURRENT_DATE.getMonth() + 1 && tempD == CURRENT_DATE.getDate())) {
+                            tempDate.setDate(tempDate.getDate() + 7);
                             tempY = tempDate.getFullYear();
                             tempM = tempDate.getMonth() + 1;
                             tempD = tempDate.getDate();
-                            tempDate.setDate(tempDate.getDate() + 7);
                         }
                         temp.date = tempDate;
                         //이 함수 호출시 현재 loadItems는 이 명령줄에서 중단, 그러나 함수 내부에서 loadItems를 재호출한다.
                         return updateTime(temp);
                     }
-                    else {
-                        li.textContent += " || It's repeatable.";
-                    }
+                    tr.setAttribute("class", "week");
                 }
                 //목표날짜가 오늘이면 :
                 if(tempY == CURRENT_DATE.getFullYear() && tempM == CURRENT_DATE.getMonth() + 1 && tempD == CURRENT_DATE.getDate()) {
-                    li.textContent += " || It's today!";
-                    itemList.appendChild(li);
+                    tr.setAttribute("class", tr.getAttribute("class") + " today");
                 }
                 //목표날짜가 과거면 :
                 else if(tempDate < CURRENT_DATE) {
-                    li.addEventListener("contextmenu", function(e) {
+                    tr.setAttribute("class", tr.getAttribute("class") + " past");
+                    tr.addEventListener("contextmenu", function(e) {
                         e.preventDefault();
                         addTime(temp.id);
                     });
-                    expiredList.appendChild(li);
                 }
                 //목표날짜가 미래면 :
                 else {
-                    li.textContent += ` (${percentDate}퍼센트)`;
-                    itemList.appendChild(li);
+                    tr.setAttribute("class", tr.getAttribute("class") + " future");
+                    tr.setAttribute("value", percentDate);
+                }
+                //체크박스가 체크되어 있다면, 루틴 작업만 화면에 표시
+                const checkbox = document.getElementById("checkBox");
+                if(checkbox.checked) {
+                    if(temp.isRepeat == "true") {
+                        itemList.appendChild(tr);
+                    }
+                }
+                else {
+                    itemList.appendChild(tr);
                 }
             }
         }
+        popUpinsert();
     };
 }
 
-// checkbox.checked << 코드 필요
 // 아이템 저장
-document.getElementById("saveButton").addEventListener("click", function() {
+function saveItem() {
     //반복실행 여부 체크
     const checkbox = document.getElementById("checkBox");
     let isRepeat = "false";
@@ -141,7 +146,7 @@ document.getElementById("saveButton").addEventListener("click", function() {
         document.getElementById("datePicker").value = "";
         loadItems();
     };
-});
+}
 
 // 아이템 삭제
 function deleteItem(id) {
@@ -177,7 +182,7 @@ function addTime(id) {
         }
     }
 }
-
+//반복 옵션이 체크된 데이터가 목표일이 만료된 경우, 호출된다.
 function updateTime(data) {
     const store = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME);
     let req = store.get(data.id);
@@ -195,5 +200,62 @@ function updateTime(data) {
             console.log("edited data : date + 1");
             loadItems();
         }
+    }
+}
+//팝업창을 띄우는 코드 -> 완료 후 colorData 호출
+function popUpinsert() {
+    const info = document.getElementsByClassName("info");
+    for(let element of info) {
+        //팝업창에 띄울 문자 생성
+        const savedDate = element.innerHTML;
+        var tempM = new Date(savedDate).getMonth() + 1;
+        var tempD = new Date(savedDate).getDate();
+        element.innerHTML = "";
+
+        const container = document.createElement("div");
+        container.setAttribute("class", "popup-container");
+
+        const img = document.createElement("img");
+        img.src = "info.png";
+        //이미지 크기를 일반적인 tr 높이에 맞춘다.
+        var h = window.getComputedStyle(document.getElementById("init")).height;
+        img.setAttribute("style","height:" + h + ";");
+        img.setAttribute("class", "color");
+        container.appendChild(img);
+
+        const content = document.createElement("div");
+        content.setAttribute("class", "popup-content");
+        content.innerHTML = tempM + "월 " + tempD + "일에 저장된 작업";
+
+        //태그를 추가
+        container.appendChild(content);
+        element.appendChild(container);
+    }
+    colorData();
+}
+//클래스에 따라 디자인 변경
+function colorData() {
+    const past = document.getElementsByClassName("past");
+    const week = document.getElementsByClassName("week");
+    const today = document.getElementsByClassName("today");
+    const future = document.getElementsByClassName("future");
+    for (let element of past) {
+        const colored = element.getElementsByClassName("color");
+        colored[0].style.backgroundColor = "grey";
+    }
+    for (let element of today) {
+        const colored = element.getElementsByClassName("color");
+        colored[0].style.backgroundColor = "red";
+    }
+    for (let element of future) {
+        const colored = element.getElementsByClassName("color");
+        const value = parseFloat(element.getAttribute("value"));
+        const redValue = Math.floor(255 * value / 100);
+
+        colored[0].style.backgroundColor = `rgb(${redValue}, 0, 0)`;
+    }
+    for (let element of week) {
+        const radio = element.getElementsByClassName("repeatable");
+        radio[0].checked = true;
     }
 }
