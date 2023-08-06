@@ -2,26 +2,25 @@
     position: relative;
     display: inline-block;
 }
+
 .popup-content {
     display: none;
-    position: absolute;
-    top: 0;
-    left: 100%;
-    transform: translateX(10px);
-    background-color: #f9f9f9;
-    border: 1px solid #ccc;
-    padding: 10px;
-    width: 200px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-.popup-container:hover .popup-content {
-    display: block;
 }
 
 .color {
     border-radius: 50%;
 }
+
 tr {
-    text-align: center; 
-    vertical-align: middle;
+    text-align: center;
+    align-items: center;
+}
+
+table th {
+	background-color: #eeeeee; 
+	text-align: center; 
+}
+
+img:hover {
+    cursor: pointer;
 }

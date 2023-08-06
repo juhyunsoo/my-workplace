@@ -19,3 +19,7 @@ document.getElementById("checkBox").addEventListener("keydown", function(event) 
 document.getElementById("checkBox").addEventListener("click", function(event) {
     loadItems();
 });
+
+document.getElementById("saveButton").addEventListener("click", function(event) {
+    saveItem();
+});

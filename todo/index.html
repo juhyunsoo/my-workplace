@@ -5,22 +5,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To-do list</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="mycss.css">
 </head>
 
 <body>
-    <table>
-        <thead>
-            <tr>
-                <td><input type="text" id="text" placeholder="Enter text"></td>
-                <td><input type="date" id="datePicker"></td>
-                <td><span><input id="checkBox" type="checkbox" name="repeat" value="true">반복</span></td>
-            </tr>
-        </thead>
-        <tbody id="itemList"></tbody>
-    </table>
+    <div class="container">
+        <table class="table table-hover table-bordered">
+            <thead>
+                <tr id="init"><td colspan="4"></td></tr>
+                <tr><th colspan="4">To-do list</th></tr>
+                <tr>
+                    <td><input type="text" id="text" placeholder="Enter text"></td>
+                    <td><input type="date" id="datePicker"></td>
+                    <td><span><input id="checkBox" type="checkbox" name="repeat" value="true"></span></td>
+                    <td><button id="saveButton" class="btn btn-primary">저장</button></td>
+                </tr>
+                <tr><th colspan="4">목록</th></tr>
+                <tr>
+                    <td>할일</td>
+                    <td>목표</td>
+                    <td>반복</td>
+                    <td>상세</td>
+                </tr>
+            </thead>
+            <tbody id="itemList"></tbody>
+        </table>
+    </div>
+
     <script src="script.js"></script>
     <script src="setup.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
 </body>
 
 </html>
